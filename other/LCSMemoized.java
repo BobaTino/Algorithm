@@ -15,6 +15,8 @@
 //         MEMO[(i, j)] = max(LCS-HELPER(x, y, i - 1, j, MEMO), LCS-HELPER(x, y, i, j - 1, MEMO))
 //     result = MEMO[(i, j)]
 //     return result
+// TimeO(n^c)
+// SpaceO(n^c)
 import java.util.HashMap;
 import java.util.Map;
 

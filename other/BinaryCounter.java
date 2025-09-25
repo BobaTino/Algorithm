@@ -1,4 +1,12 @@
+// BINARY COUNTER(n)
+//     Let A be an array of length n, initialized with all 0s
+//     for count = 0 to (2^n - 1) 
+//          Print A 
+//          Increment(A)
+//          Wait 2 seconds
 
+// Time O(n)
+// Space O(n)
 public class BinaryCounter {
 
     public static void increment(int[] A) {

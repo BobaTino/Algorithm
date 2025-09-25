@@ -17,6 +17,8 @@
 //             tempBuy = i
 //     return (buy, sell, maxSoFar)
 
+// Time ?
+// Space O(n)
 public class MaximumSubarrayStock {
 
     public static int[] maxProfit(int[] prices) {

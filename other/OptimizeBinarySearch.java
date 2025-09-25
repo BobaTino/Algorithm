@@ -1,3 +1,5 @@
+// Time O(log n)
+// Space O(n)
 
 public class OptimizeBinarySearch {
 

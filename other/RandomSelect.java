@@ -33,6 +33,8 @@
 //             swap A[i] with A[j]
 //     swap A[i + 1] with A[r]
 //     return i + 1
+// Time O(n log n)
+// Space O(n)
 import java.util.*;
 
 public class RandomSelect {
