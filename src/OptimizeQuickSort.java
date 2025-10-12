@@ -1,26 +1,43 @@
+// THRESHOLD = 10   // When subarray is small, switch to insertion sort
 // FUNCTION OptimizeQuickSort(objects, low, high):
-//     if low < high:
+//     WHILE low < high:
+//         IF (high - low + 1) < THRESHOLD:
+//             insertionSort(objects, low, high)
+//             RETURN
 //         pivotIndex = randomizedPartition(objects, low, high)
-//         OptimizeQuickSort(objects, low, pivotIndex - 1)
-//         OptimizeQuickSort(objects, pivotIndex + 1, high)
-
+//         // Recursively sort the smaller side first to reduce stack depth
+//         IF pivotIndex - low < high - pivotIndex:
+//             OptimizeQuickSort(objects, low, pivotIndex - 1)
+//             low = pivotIndex + 1   // Tail call elimination
+//         ELSE:
+//             OptimizeQuickSort(objects, pivotIndex + 1, high)
+//             high = pivotIndex - 1
 // FUNCTION randomizedPartition(objects, low, high):
 //     randomIndex = RANDOM(low, high)
 //     SWAP(objects[randomIndex], objects[high])
-//     pivot = objects[high].renderZ 
+//     pivot = objects[high].renderZ
 //     i = low - 1
-//     for j = low to high - 1:
-//         if objects[j].renderZ < pivot:
+//     FOR j = low TO high - 1:
+//         IF objects[j].renderZ < pivot:
 //             i = i + 1
 //             SWAP(objects[i], objects[j])
 //     SWAP(objects[i + 1], objects[high])
-//     return i + 1
+//     RETURN i + 1
+// FUNCTION insertionSort(objects, low, high):
+//     FOR i = low + 1 TO high:
+//         key = objects[i]
+//         j = i - 1
+//         WHILE j >= low AND objects[j].renderZ > key.renderZ:
+//             objects[j + 1] = objects[j]
+//             j = j - 1
+//         objects[j + 1] = key
+
 import java.util.Random;
 
 class GameObject {
 
     String name;
-    int renderZ;  // Depth or rendering order value
+    int renderZ;
 
     public GameObject(String name, int renderZ) {
         this.name = name;
@@ -36,12 +53,25 @@ class GameObject {
 public class OptimizeQuickSort {
 
     private static final Random rand = new Random();
+    private static final int THRESHOLD = 10; // Switch point to insertion sort
 
     public static void OptimizeQuickSort(GameObject[] arr, int low, int high) {
-        if (low < high) {
+        while (low < high) {
+            if (high - low + 1 < THRESHOLD) {
+                insertionSort(arr, low, high);
+                return;
+            }
+
             int pivotIndex = randomizedPartition(arr, low, high);
-            OptimizeQuickSort(arr, low, pivotIndex - 1);
-            OptimizeQuickSort(arr, pivotIndex + 1, high);
+
+            // Sort smaller partition first (tail recursion optimization)
+            if (pivotIndex - low < high - pivotIndex) {
+                OptimizeQuickSort(arr, low, pivotIndex - 1);
+                low = pivotIndex + 1;
+            } else {
+                OptimizeQuickSort(arr, pivotIndex + 1, high);
+                high = pivotIndex - 1;
+            }
         }
     }
 
@@ -58,9 +88,20 @@ public class OptimizeQuickSort {
                 swap(arr, i, j);
             }
         }
-
         swap(arr, i + 1, high);
         return i + 1;
+    }
+
+    private static void insertionSort(GameObject[] arr, int low, int high) {
+        for (int i = low + 1; i <= high; i++) {
+            GameObject key = arr[i];
+            int j = i - 1;
+            while (j >= low && arr[j].renderZ > key.renderZ) {
+                arr[j + 1] = arr[j];
+                j--;
+            }
+            arr[j + 1] = key;
+        }
     }
 
     private static void swap(GameObject[] arr, int i, int j) {
@@ -69,14 +110,16 @@ public class OptimizeQuickSort {
         arr[j] = temp;
     }
 
-    // Example usage
     public static void main(String[] args) {
         GameObject[] objects = {
             new GameObject("Player", 5),
             new GameObject("Enemy", 2),
             new GameObject("Background", 10),
             new GameObject("Projectile", 3),
-            new GameObject("NPC", 7)
+            new GameObject("NPC", 7),
+            new GameObject("UI", 15),
+            new GameObject("Particle", 6),
+            new GameObject("Shield", 4)
         };
 
         System.out.println("Before Sorting (Rendering Order):");
