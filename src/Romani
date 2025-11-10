@@ -1,0 +1,162 @@
+ZERO(r, c):
+    Make matrix Z of r rows and c columns filled with 0
+    return Z
+
+NEXT-POW2(n):
+    p ← 1
+    while p < n:
+        p ← 2 * p
+    return p
+
+PAD-TO-SIZE(M, m):
+    n ← M.rows
+    if n = m: return M
+    P ← ZERO(m, m)
+    for i = 0 .. n-1:
+        copy M[i, 0 .. n-1] → P[i, 0 .. n-1]
+    return P
+
+TRIM-TO-N(M, n):
+    if M.rows = n: return M
+    T ← ZERO(n, n)
+    for i = 0 .. n-1:
+        copy M[i, 0 .. n-1] → T[i, 0 .. n-1]
+    return T
+
+ADD(X, Y):
+    n ← X.rows
+    Z ← ZERO(n, n)
+    for i = 0 .. n-1:
+        for j = 0 .. n-1:
+            Z[i,j] ← X[i,j] + Y[i,j]
+    return Z
+
+SUBTRACT(X, Y):
+    n ← X.rows
+    Z ← ZERO(n, n)
+    for i = 0 .. n-1:
+        for j = 0 .. n-1:
+            Z[i,j] ← X[i,j] - Y[i,j]
+    return Z
+
+SUB(M, r, c, sz):
+    S ← ZERO(sz, sz)
+    for i = 0 .. sz-1:
+        copy M[r+i, c .. c+sz-1] → S[i, 0 .. sz-1]
+    return S
+
+JOIN(S, D, r, c):
+    for i = 0 .. S.rows-1:
+        copy S[i, 0 .. S.cols-1] → D[r+i, c .. c+S.cols-1]
+
+MULTIPLY(A, B):
+    n ← A.rows
+    m ← NEXT-POW2(n)
+    Ap ← PAD-TO-SIZE(A, m)
+    Bp ← PAD-TO-SIZE(B, m)
+    Cp ← STRASSEN(Ap, Bp)
+    return TRIM-TO-N(Cp, n)
+
+STRASSEN(A, B):
+    n ← A.rows
+    if n = 1:
+        return [[ A[0,0] * B[0,0] ]]
+
+    half ← n / 2
+
+    // Split A and B into quadrants
+    A11 ← SUB(A, 0, 0, half)
+    A12 ← SUB(A, 0, half, half)
+    A21 ← SUB(A, half, 0, half)
+    A22 ← SUB(A, half, half, half)
+
+    B11 ← SUB(B, 0, 0, half)
+    B12 ← SUB(B, 0, half, half)
+    B21 ← SUB(B, half, 0, half)
+    B22 ← SUB(B, half, half, half)
+
+    // Compute Strassen intermediate sums
+    S1 ← SUBTRACT(B12, B22)
+    S2 ← ADD(A11, A12)
+    S3 ← ADD(A21, A22)
+    S4 ← SUBTRACT(B21, B11)
+    S5 ← ADD(A11, A22)
+    S6 ← ADD(B11, B22)
+    S7 ← SUBTRACT(A12, A22)
+    S8 ← ADD(B21, B22)
+    S9 ← SUBTRACT(A11, A21)
+    S10 ← ADD(B11, B12)
+
+    // Recursive multiplications
+    P1 ← STRASSEN(A11, S1)
+    P2 ← STRASSEN(S2, B22)
+    P3 ← STRASSEN(S3, B11)
+    P4 ← STRASSEN(A22, S4)
+    P5 ← STRASSEN(S5, S6)
+    P6 ← STRASSEN(S7, S8)
+    P7 ← STRASSEN(S9, S10)
+
+    // Combine sub-results into C
+    C11 ← ADD(SUBTRACT(ADD(P5, P4), P2), P6)
+    C12 ← ADD(P1, P2)
+    C21 ← ADD(P3, P4)
+    C22 ← SUBTRACT(SUBTRACT(ADD(P5, P1), P3), P7)
+
+    C ← ZERO(n, n)
+    JOIN(C11, C, 0, 0)
+    JOIN(C12, C, 0, half)
+    JOIN(C21, C, half, 0)
+    JOIN(C22, C, half, half)
+    return C
+
+REAL-MULTIPLY(U, V): 
+    n ← U.rows
+    W ← ZERO(n, n)
+    for i = 0 .. n-1:
+        for k = 0 .. n-1:
+            uik ← U[i,k]
+            if uik = 0.0: continue
+            for j = 0 .. n-1:
+                W[i,j] ← W[i,j] + uik * V[k,j]
+    return W
+
+ROMANI (A, B, INF):
+    n ← A.rows
+    x ← 1 / (n + 1)
+    logx ← ln(x)
+
+    A′ ← ZERO(n, n)
+    B′ ← ZERO(n, n)
+    for i = 0 .. n-1:
+        for j = 0 .. n-1:
+            if A[i,j] = INF: A′[i,j] ← 0.0
+            else A′[i,j] ← x^(A[i,j])
+            if B[i,j] = INF: B′[i,j] ← 0.0
+            else B′[i,j] ← x^(B[i,j])
+
+    // You can replace REAL-MULTIPLY with STRASSEN for speed
+    S ← REAL-MULTIPLY(A′, B′)
+
+    Q ← ZERO(n, n)
+    for i = 0 .. n-1:
+        for j = 0 .. n-1:
+            if S[i,j] = 0.0:
+                Q[i,j] ← INF
+            else:
+                q ← FLOOR( ln(S[i,j]) / logx + 1e-9 )
+                if q < 0: q ← 0
+                Q[i,j] ← q
+    return Q
+
+// Each node represents an asset (stock, bond, currency)
+// Each edge weight represents cost, risk, or time delay between assets
+
+// Compute Q = ROMANI(A, B)
+// to find the minimum cumulative risk or transaction cost between every pair of assets in a portfolio network.
+
+EXAMPLE:
+    A ← risk matrix between assets
+    B ← transaction cost matrix
+    INF ← large constant (e.g., 999999)
+
+    Q ← ROMANI(A, B, INF)
